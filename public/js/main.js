@@ -2,8 +2,30 @@ const socket = io();
 
 const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
+const roomName = document.getElementById('room-name');
+const userList = document.getElementById('users');  
 
-//Message from server
+//getting username and room from the url
+const {username , room} = Qs.parse(location.search,{
+  ignoreQueryPrefix:true //to remove the symbols
+})
+
+//join chatroom
+socket.emit('joinRoom',{username,room})
+
+//get room and users
+socket.on('roomUsers',({room ,  users}) =>{
+  outputRoomName(room);
+  outputUsers(users);
+});
+
+//Get room and users
+socket.on('roomUsers',({room , users}) => {
+  outputRoomName(room);
+  outputUsers(users);
+})
+
+//Message from server 
 socket.on('message',message =>
 {
      console.log(message);
@@ -26,8 +48,8 @@ chatForm.addEventListener('submit', (e) => {
   socket.emit('chatMessage',msg);
 
   //clearing the field
-  e.target.element.msg.value = '';
-  e.target.element.msg.focus();
+  e.target.elements.msg.value = '';
+  e.target.elements.msg.focus();
 });
 
 //Outputting messages using DOM
@@ -41,3 +63,19 @@ function outputMessage(message)
   </p>`;
   document.querySelector('.chat-messages').appendChild(div);
 } 
+
+//Adding room name using dom
+function outputRoomName(room) {
+  roomName.innerText = room;
+  console.log(room);
+}
+
+// Add users to DOM
+function outputUsers(users) {
+  userList.innerHTML = '';
+  users.forEach((user) => {
+    const li = document.createElement('li');
+    li.innerText = user.username;
+    userList.appendChild(li);
+  });
+}
